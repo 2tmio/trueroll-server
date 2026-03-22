@@ -100,12 +100,12 @@ app.get('/api/random/txid', async (req, res) => {
         const txId = result.txid || result.transaction.txID;
         console.log('[TxID] ✅ TxID 생성:', txId);
 
-        // 블록 확정 대기
-        console.log('[TxID] 블록 확정 대기 중...');
+        // 블록 확정 빠른 체크 (최대 2초)
+        console.log('[TxID] 블록 확정 확인 중... (빠른 체크)');
         let blockNumber = null;
         let confirmed = false;
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 2; i++) {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             const txInfo = await tronWeb.trx.getTransactionInfo(txId);
@@ -119,7 +119,7 @@ app.get('/api/random/txid', async (req, res) => {
         }
 
         if (!confirmed) {
-            console.warn('[TxID] ⚠ 블록 미확정 (10초 타임아웃)');
+            console.log('[TxID] ⚡ 블록 미확정 (빠른 응답 우선)');
         }
 
         // 난수 추출
@@ -220,12 +220,12 @@ app.get('/api/random/batch', async (req, res) => {
         const txId = result.txid || result.transaction.txID;
         console.log('[Batch] ✅ TxID:', txId);
 
-        // 블록 확정 대기
-        console.log('[Batch] 블록 확정 대기 중...');
+        // 블록 확정 빠른 체크 (최대 2초)
+        console.log('[Batch] 블록 확정 확인 중... (빠른 체크)');
         let blockNumber = null;
         let confirmed = false;
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 2; i++) {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             const txInfo = await tronWeb.trx.getTransactionInfo(txId);
@@ -236,6 +236,10 @@ app.get('/api/random/batch', async (req, res) => {
                 console.log(`[Batch] ✅ 블록 확정: #${blockNumber}`);
                 break;
             }
+        }
+
+        if (!confirmed) {
+            console.log('[Batch] ⚡ 블록 미확정 (빠른 응답 우선)');
         }
 
         // TxID를 10개 구간으로 분할하여 난수 생성
