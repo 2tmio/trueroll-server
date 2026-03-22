@@ -10,6 +10,10 @@ app.use(express.json());
 let TronWeb;
 let tronWeb;
 
+// ★★★ 메모리 히스토리 캐시 (최근 100개) ★★★
+const historyCache = [];
+const MAX_HISTORY = 100;
+
 async function initializeTronWeb() {
     try {
         console.log('⏳ TronWeb 초기화 중...');
@@ -137,6 +141,49 @@ app.get('/api/random/txid', async (req, res) => {
         console.error('[TxID] ❌ 에러:', error);
         res.status(500).json({ error: error.message });
     }
+});
+
+// ★★★ 히스토리 저장 ★★★
+app.post('/api/history/add', async (req, res) => {
+    try {
+        const { userId, txId, equipmentId, rewardCategory, randomValue, blockNumber } = req.body;
+
+        const historyItem = {
+            id: Date.now(),
+            user_id: userId,
+            tx_id: txId,
+            equipment_id: equipmentId,
+            reward_category: rewardCategory,
+            random_value: randomValue,
+            block_number: blockNumber,
+            timestamp: Math.floor(Date.now() / 1000)
+        };
+
+        // 캐시에 추가
+        historyCache.unshift(historyItem);
+
+        // 최대 개수 유지
+        if (historyCache.length > MAX_HISTORY) {
+            historyCache.pop();
+        }
+
+        console.log(`[History] 저장 완료: ${userId} - ${equipmentId}`);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('[History] ❌ 에러:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ★★★ 최근 히스토리 조회 ★★★
+app.get('/api/history/recent', async (req, res) => {
+    const limit = parseInt(req.query.limit) || 20;
+
+    res.json({
+        success: true,
+        history: historyCache.slice(0, limit)
+    });
 });
 
 // ★★★ 배치 난수 생성 (1개 TxID를 10개 구간으로 분할) ★★★
